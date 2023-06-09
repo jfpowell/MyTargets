@@ -297,7 +297,7 @@ class HandicapCalculatorTest {
         unit.setArrowCount(36)
         var handicapList = unit.handicapScoresList()
 
-        assertEquals(101, handicapList.size)
+        assertEquals(151, handicapList.size)
 
         assertBigDecimalEquals(324, handicapList.get(18))
         assertBigDecimalEquals(232, handicapList.get(42))
@@ -318,7 +318,7 @@ class HandicapCalculatorTest {
         unit.setArrowCount(36)
         var handicapList = unit.handicapScoresList(false)
 
-        assertEquals(101, handicapList.size)
+        assertEquals(151, handicapList.size)
 
         assertBigDecimalEquals("323.64", handicapList.get(18))
         assertBigDecimalEquals("232.19", handicapList.get(42))

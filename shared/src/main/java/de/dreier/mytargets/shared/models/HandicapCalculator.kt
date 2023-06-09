@@ -35,8 +35,19 @@ class HandicapCalculator {
         this.maxScore = round.score.totalPoints
         this.reachedScore = round.score.reachedPoints
         setTargetDistance(round.distance)
+        defaultArrowRadius()
     }
-    constructor()
+    constructor() {
+        defaultArrowRadius()
+    }
+
+    fun defaultArrowRadius() {
+        if (newHandicaps) {
+            this.arrowRadius = BigDecimal("0.255")
+        } else {
+            this.arrowRadius = BigDecimal("0.357")
+        }
+    }
 
     var reachedScore: Int = 0
         private set
@@ -54,14 +65,17 @@ class HandicapCalculator {
         private set
     lateinit var metricDistance: BigDecimal
         private set
-    var arrowRadius = BigDecimal("0.357")
+    var newHandicaps: Boolean = true
         private set
+    lateinit var arrowRadius: BigDecimal
+        private set
+
 
     companion object {
         @JvmStatic
         fun handicapLowerBound() : Int = 0
         @JvmStatic
-        fun handicapUpperBound() : Int = 100
+        fun handicapUpperBound() : Int = 150
     }
 
     fun setArrowCount(arrowCount: Int) {
@@ -95,18 +109,28 @@ class HandicapCalculator {
         return 1.429*(10.00.pow(-6))*1.07.pow(handicap+4.3)
     }
 
+    fun angularDeviationRadians(handicap: Int): BigDecimal {
+        if (newHandicaps) {
+            return BigDecimal.valueOf((1.035.pow(handicap + 6)) * 5 * (10.0.pow(-4)))
+        } else {
+            return BigDecimal.valueOf((1.036.pow(handicap + 12.9)) * 5 * (10.0.pow(-4)))
+        }
+    }
+
     fun angularDeviation(handicap: Int): BigDecimal {
-        return  BigDecimal.valueOf((1.036.pow(handicap+12.9))*5*(10.0.pow(-4))*180/Math.PI)
+        return angularDeviationRadians(handicap) * BigDecimal.valueOf(180 / Math.PI)
     }
 
     fun dispersionFactor(handicap: Int): BigDecimal {
-        //F=1 + 1.429*10^-6 * 1.07^(handicap+4.3) * distance_in_metres^2
-        return BigDecimal.valueOf(1 + 1.429 * (10.0.pow(-6)) * 1.07.pow(handicap+4.3) * metricDistance.toDouble().pow(2))
+        if (newHandicaps) {
+            return BigDecimal.valueOf(Math.exp(0.00365 * metricDistance.toDouble()))
+        } else {
+            return BigDecimal.valueOf(1 + handicapCoefficient(handicap) * metricDistance.toDouble().pow(2))
+        }
     }
 
     fun groupRadius(handicap: Int): BigDecimal {
-        //sigma=groupRadiusCm==100*distance_in_metres*(1.036^(handicap+12.9))*5*(10^-4)*Dispersion_Factor
-        return BigDecimal("0.05") * metricDistance * BigDecimal.valueOf(1.036.pow(handicap+12.9)) * dispersionFactor(handicap)
+        return BigDecimal.valueOf(100) * metricDistance * angularDeviationRadians(handicap) * dispersionFactor(handicap)
     }
 
     fun averageArrowScoreForHandicap(handicap: Int): BigDecimal {
